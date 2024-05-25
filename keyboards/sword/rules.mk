@@ -1,1 +1,1 @@
-DEFAULT_FOLDER = hillside/46/0_1
+DEFAULT_FOLDER = sword/1_0_0
