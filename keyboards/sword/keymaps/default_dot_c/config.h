@@ -8,4 +8,5 @@
 // For those boands, use usb detection instead.
 // #define SPLIT_USB_DETECT
 
-#define SPLIT_HAND_MATRIX_GRID_LOW_IS_LEFT
+#define SPLIT_HAND_PIN_LOW_IS_LEFT
+#define MASTER_RIGHT
