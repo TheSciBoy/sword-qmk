@@ -16,8 +16,8 @@ class Rectangle(Element):
         super().__init__(x, y, width, height)
         self.color = color
     
-    def draw(self):
-        draw_rectangle(self.x, self.y, self.width, self.height, self.color)
+    def draw(self, offset):
+        draw_rectangle(self.x + offset[0], self.y + offset[1], self.width, self.height, self.color)
 
 
 class Text(Element):
@@ -29,7 +29,7 @@ class Text(Element):
         self.width = measure_text(text, size)
         self.height = size
 
-
-    def draw(self):
-        draw_text(self.text, self.x, self.y, self.size, self.color)
-
+    def draw(self, offset):
+        x = self.x + offset[0]
+        y = self.y + offset[1]
+        draw_text(self.text, x, y, self.size, self.color)

@@ -6,8 +6,10 @@ from pyray import *
 
 import elements
 import scene
+import selector
 
 qmk_dir = sys.argv[1] if len(sys.argv) > 1 else "."
+
 
 def get_key_setup_scene(file_name):
     with open(file_name) as f:
@@ -40,30 +42,20 @@ def get_key_setup_scene(file_name):
     return keyboard_scene
 
 
-def get_selector_scene(name: str, items: list):
-    selector_scene = scene.Scene(name)
-    y = 0
-    font_size = 20
-    for item in items:
-        row = elements.Text(
-            0,
-            y,
-            item,
-            font_size,
-            BLACK
-        )
-        selector_scene.contents.append(row)
-        y += row.height
-    return selector_scene
-
-
-# current_scene = get_key_setup_scene(sys.argv[1])
-current_scene = get_selector_scene("Select a keyboard layout", sorted([x.name for x in Path(qmk_dir).iterdir() if x.is_dir()]))
-
 init_window(800, 450, "Hello")
 set_target_fps(60)
 
+current_scene = selector.Selector(
+    "Select a keyboard layout",
+    sorted([x.name for x in Path(qmk_dir).iterdir() if x.is_dir()]),
+    get_screen_height()
+)
+
 while not window_should_close():
+    key = get_key_pressed()
+    while key:
+        current_scene.on_key_press(key)
+        key = get_key_pressed()
     current_scene.draw()
 
 close_window()
