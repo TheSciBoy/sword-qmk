@@ -1,7 +1,7 @@
 import json
 import sys
-import os
 
+from pathlib import Path
 from pyray import *
 
 import elements
@@ -58,7 +58,7 @@ def get_selector_scene(name: str, items: list):
 
 
 # current_scene = get_key_setup_scene(sys.argv[1])
-current_scene = get_selector_scene("Select a keyboard layout", sorted(os.listdir(qmk_dir)))
+current_scene = get_selector_scene("Select a keyboard layout", sorted([x.name for x in Path(qmk_dir).iterdir() if x.is_dir()]))
 
 init_window(800, 450, "Hello")
 set_target_fps(60)
