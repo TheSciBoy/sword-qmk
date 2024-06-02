@@ -37,17 +37,30 @@ class Selector(scene.Scene):
         elif key == KEY_UP:
             self.selected = self.selected - 1
         elif key == KEY_PAGE_UP:
-            self.selected = self.selected - self._page_size
+            if (self.selected - self._page_size) >= 0:
+                self.selected = self.selected - self._page_size
+            else:
+                self.selected = 0
         elif key == KEY_PAGE_DOWN:
-            self.selected = self.selected + self._page_size
+            if (self.selected + self._page_size) < len(self.contents):
+                self.selected = self.selected + self._page_size
+            else:
+                self.selected = len(self.contents) - 1
         elif key == KEY_ENTER:
             self.result = self.contents[self.selected].text
+        elif key == KEY_END:
+            self.selected = len(self.contents) - 1
+        elif key == KEY_HOME:
+            self.selected = 0
 
         while self.selected >= len(self.contents):
             self.selected = self.selected - len(self.contents)
         while self.selected < 0:
             self.selected = self.selected + len(self.contents)
-        if (self.contents[self.selected].y + self.offset[1]) > get_screen_height():
+        if (self.contents[self.selected].y + self.offset[1]) > (get_screen_height() - self.font_size):
             self.offset = (0, -self.contents[self.selected].y)
+            if (-self.offset[1]) // self.font_size > len(self.contents) - self._page_size:
+                self.offset = (0, -self.font_size *
+                               (len(self.contents) - self._page_size))
         elif self.contents[self.selected].y + self.offset[1] < 0:
             self.offset = (0, -self.contents[self.selected].y)
