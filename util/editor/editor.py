@@ -1,5 +1,6 @@
 import json
 import sys
+import os
 
 from pyray import *
 
@@ -57,9 +58,10 @@ def get_selector_scene(name: str, items: list):
 
 
 # current_scene = get_key_setup_scene(sys.argv[1])
-current_scene = get_selector_scene("Select a keyboard layout", ["Planck", "Preonic", "Swerve", "Tidal", "Corrosive"])
+current_scene = get_selector_scene("Select a keyboard layout", sorted(os.listdir(qmk_dir)))
 
 init_window(800, 450, "Hello")
+set_target_fps(60)
 
 while not window_should_close():
     current_scene.draw()
