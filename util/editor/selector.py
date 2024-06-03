@@ -6,7 +6,7 @@ from pyray import *
 
 
 class Selector(scene.Scene):
-    def __init__(self, name: str, items: list, page_height: int):
+    def __init__(self, name: str, items: list, page_height: int, following_scene: str):
         super().__init__(name)
         self.selected = 0
         self.font_size = 20
@@ -15,6 +15,7 @@ class Selector(scene.Scene):
         self.y = 0
         self.result = None
         self._page_size = page_height // self.font_size
+        self.following_scene = following_scene
         for item in items:
             row = elements.Text(
                 0,
@@ -31,7 +32,7 @@ class Selector(scene.Scene):
         super().draw()
         self.contents[self.selected].color = self.unselected_color
 
-    def on_key_press(self, key):
+    def trigger_key(self, key) -> str:
         if key == KEY_DOWN:
             self.selected = self.selected + 1
         elif key == KEY_UP:
@@ -48,10 +49,19 @@ class Selector(scene.Scene):
                 self.selected = len(self.contents) - 1
         elif key == KEY_ENTER:
             self.result = self.contents[self.selected].text
+            return self.following_scene
         elif key == KEY_END:
             self.selected = len(self.contents) - 1
         elif key == KEY_HOME:
             self.selected = 0
+        elif key >= KEY_A and key <= KEY_Z:
+            if self.contents[self.selected].text.lower().startswith(chr(key).lower()):
+                self.selected = self.selected + 1
+            else:
+                for i, item in enumerate(self.contents):
+                    if item.text.lower().startswith(chr(key).lower()):
+                        self.selected = i
+                        break
 
         while self.selected >= len(self.contents):
             self.selected = self.selected - len(self.contents)
@@ -64,3 +74,4 @@ class Selector(scene.Scene):
                                (len(self.contents) - self._page_size))
         elif self.contents[self.selected].y + self.offset[1] < 0:
             self.offset = (0, -self.contents[self.selected].y)
+        return None

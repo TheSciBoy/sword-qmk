@@ -8,10 +8,12 @@ import elements
 import scene
 import selector
 
-qmk_dir = sys.argv[1] if len(sys.argv) > 1 else "."
+qmk_dir = Path(sys.argv[1] if len(sys.argv) > 1 else ".")
 
 
-def get_key_setup_scene(file_name):
+def get_key_setup_scene(file_name: Path):
+    # TODO: Get all the info.json's, we need to select a keymap
+    
     with open(file_name) as f:
         doc = json.load(f)
 
@@ -42,20 +44,34 @@ def get_key_setup_scene(file_name):
     return keyboard_scene
 
 
+def get_scene(name: str, previous_scene : scene.Scene = None):
+    if name == "KeyboardSelector":
+        return scene.Selector(name)
+    elif name == "Layout":
+        return get_key_setup_scene(qmk_dir / previous_scene.result)
+    else:
+        raise ValueError(f"Unknown scene type {name}")
+
+
 init_window(800, 450, "Hello")
 set_target_fps(60)
 
 current_scene = selector.Selector(
     "Select a keyboard layout",
-    sorted([x.name for x in Path(qmk_dir).iterdir() if x.is_dir()]),
+    sorted([x.name for x in qmk_dir.iterdir() if x.is_dir()]),
     get_screen_height()
 )
 
 while not window_should_close():
+    next_scene = current_scene.execute()
+    if next_scene:
+        current_scene = get_scene(next_scene, current_scene)
+
     key = get_key_pressed()
     while key:
         current_scene.on_key_press(key)
         key = get_key_pressed()
+    
     current_scene.draw()
 
 close_window()
