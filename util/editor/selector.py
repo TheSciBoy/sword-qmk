@@ -6,7 +6,7 @@ from pyray import *
 
 
 class Selector(scene.Scene):
-    def __init__(self, name: str, items: list, page_height: int, following_scene: str):
+    def __init__(self, name: str, items: dict, page_height: int, select_scene: str, cancel_scene: str):
         super().__init__(name)
         self.selected = 0
         self.font_size = 20
@@ -15,12 +15,14 @@ class Selector(scene.Scene):
         self.y = 0
         self.result = None
         self._page_size = page_height // self.font_size
-        self.following_scene = following_scene
-        for item in items:
+        self.select_scene = select_scene
+        self.cancel_scene = cancel_scene
+        self.items = items
+        for name in sorted([x for x in items.keys()]):
             row = elements.Text(
                 0,
                 self.y,
-                item,
+                name,
                 self.font_size,
                 self.unselected_color
             )
@@ -48,12 +50,16 @@ class Selector(scene.Scene):
             else:
                 self.selected = len(self.contents) - 1
         elif key == KEY_ENTER:
-            self.result = self.contents[self.selected].text
-            return self.following_scene
+            name = self.contents[self.selected].text
+            self.result = self.items[name]
+            return self.select_scene
         elif key == KEY_END:
             self.selected = len(self.contents) - 1
         elif key == KEY_HOME:
             self.selected = 0
+        elif key == KEY_ESCAPE:
+            self.result = self.contents[0].parent
+            return self.cancel_scene
         elif key >= KEY_A and key <= KEY_Z:
             if self.contents[self.selected].text.lower().startswith(chr(key).lower()):
                 self.selected = self.selected + 1

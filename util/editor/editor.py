@@ -7,6 +7,7 @@ from pyray import *
 import elements
 import scene
 import selector
+import find_info
 
 qmk_dir = Path(sys.argv[1] if len(sys.argv) > 1 else ".")
 
@@ -43,10 +44,26 @@ def get_key_setup_scene(file_name: Path):
 
     return keyboard_scene
 
+print(f"Reading directory: {qmk_dir}")
+root = find_info.Info("root", qmk_dir)
+root.walk()
+print("Done.")
+
 
 def get_scene(name: str, previous_scene : scene.Scene = None):
-    if name == "KeyboardSelector":
-        return scene.Selector(name)
+    if not name:
+        return None
+    item = None
+    if name == "Selector":
+        if previous_scene:
+            item = previous_scene.result
+        return selector.Selector(
+            name,
+            item.children,
+            get_screen_height(),
+            "Selector",
+            "Selector" if item.parent else None
+        )
     elif name == "Layout":
         return get_key_setup_scene(qmk_dir / previous_scene.result)
     else:
@@ -58,18 +75,25 @@ set_target_fps(60)
 
 current_scene = selector.Selector(
     "Select a keyboard layout",
-    sorted([x.name for x in qmk_dir.iterdir() if x.is_dir()]),
-    get_screen_height()
+    root.children,
+    get_screen_height(),
+    "Selector",
+    None
 )
 
-while not window_should_close():
+while current_scene and not window_should_close():
     next_scene = current_scene.execute()
     if next_scene:
         current_scene = get_scene(next_scene, current_scene)
+        if not current_scene:
+            break
 
     key = get_key_pressed()
     while key:
-        current_scene.on_key_press(key)
+        next_scene = current_scene.on_key_press(key)
+        if next_scene:
+            current_scene = get_scene(next_scene, current_scene)
+            break
         key = get_key_pressed()
     
     current_scene.draw()
