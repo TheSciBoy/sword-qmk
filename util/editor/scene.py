@@ -2,14 +2,9 @@ import time
 
 from pyray import *
 
-_scenes = dict()
-
 
 class Scene:
     def __init__(self, name):
-        assert name not in _scenes, f"Scene {name} already exists"
-
-        _scenes[name] = self
         self.name = name
         self.contents = list()
         self.result = None

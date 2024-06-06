@@ -57,6 +57,9 @@ def get_scene(name: str, previous_scene : scene.Scene = None):
     if name == "Selector":
         if previous_scene:
             item = previous_scene.result
+            if len(item.children) == 0:
+                print(f"Empty children for {item}")
+                return None
         return selector.Selector(
             name,
             item.children,
@@ -96,6 +99,7 @@ while current_scene and not window_should_close():
             break
         key = get_key_pressed()
     
-    current_scene.draw()
+    if current_scene:
+        current_scene.draw()
 
 close_window()
