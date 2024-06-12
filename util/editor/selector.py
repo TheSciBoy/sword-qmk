@@ -1,12 +1,49 @@
 import scene
-
 import elements
+from find_info import Info
 
 from pyray import *
 
 
+class DirectoryExtractor:
+    def __init__(self, item: Info):
+        self.item = item
+        
+    def get_menu_item_texts(self):
+        for child in self.item.children.keys():
+            yield child
+    
+    def get_result(self, text: str):
+        return self.item.children[text]
+
+
+class LayoutExtractor:
+    def __init__(self, item: Info):
+        self.item = item
+        
+    def get_menu_item_texts(self):
+        if "layouts" not in self.item.info:
+            self.item = self.item.parent
+        if "layouts" in self.item.info:
+            for name in self.item.info["layouts"]:
+                if len(name) > 7 and name.startswith("LAYOUT_"):
+                    yield name[7:]
+    
+    def get_result(self, text: str):
+        return f"LAYOUT_{text}"
+
+
 class Selector(scene.Scene):
-    def __init__(self, name: str, items: dict, page_height: int, select_scene: str, cancel_scene: str):
+    
+    def __init__(
+            self,
+            name: str,
+            item : Info,
+            extractor,
+            page_height: int,
+            select_scene: str,
+            cancel_scene: str
+        ):
         super().__init__(name)
         self.selected = 0
         self.font_size = 20
@@ -17,8 +54,9 @@ class Selector(scene.Scene):
         self._page_size = page_height // self.font_size
         self.select_scene = select_scene
         self.cancel_scene = cancel_scene
-        self.items = items
-        for name in sorted([x for x in items.keys()]):
+        self.item = item
+        self.extractor = extractor
+        for name in sorted([x for x in self.extractor.get_menu_item_texts()]):
             row = elements.Text(
                 0,
                 self.y,
@@ -51,14 +89,14 @@ class Selector(scene.Scene):
                 self.selected = len(self.contents) - 1
         elif key == KEY_ENTER:
             name = self.contents[self.selected].text
-            self.result = self.items[name]
+            self.result = self.extractor.get_result(name)
             return self.select_scene
         elif key == KEY_END:
             self.selected = len(self.contents) - 1
         elif key == KEY_HOME:
             self.selected = 0
         elif key == KEY_ESCAPE:
-            self.result = self.contents[0].parent
+            self.result = self.item.parent
             return self.cancel_scene
         elif key >= KEY_A and key <= KEY_Z:
             if self.contents[self.selected].text.lower().startswith(chr(key).lower()):

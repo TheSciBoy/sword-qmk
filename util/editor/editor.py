@@ -1,4 +1,3 @@
-import json
 import sys
 
 from pathlib import Path
@@ -9,16 +8,16 @@ import scene
 import selector
 import find_info
 
+
 qmk_dir = Path(sys.argv[1] if len(sys.argv) > 1 else ".")
 
 
-def get_key_setup_scene(file_name: Path):
+def get_key_setup_scene(info: find_info, layout_key: str):
     # TODO: Get all the info.json's, we need to select a keymap
     
-    with open(file_name) as f:
-        doc = json.load(f)
+    info.load()
 
-    layout_data = doc["layouts"]["LAYOUT"]["layout"]
+    layout_data = info.info["layouts"][layout_key]["layout"]
 
     matrix = dict()
 
@@ -50,35 +49,54 @@ root.walk()
 print("Done.")
 
 
+def get_selector(name: str, previous_scene: scene.Scene):
+    if previous_scene:
+        item = previous_scene.result
+        if len(item.children) == 0:
+            item.load()
+            
+            if (not "layouts" in item.info):
+                item = item.parent
+                if item:
+                    item.load()
+            return selector.Selector(
+                "LayoutSelector",
+                item,
+                selector.LayoutExtractor(item),
+                get_screen_height(),
+                "LayoutView",
+                "Selector"
+            )
+    return selector.Selector(
+        name,
+        item,
+        selector.DirectoryExtractor(item),
+        get_screen_height(),
+        "Selector",
+        "Selector" if item.parent else None
+    )
+
+
 def get_scene(name: str, previous_scene : scene.Scene = None):
     if not name:
         return None
     item = None
     if name == "Selector":
-        if previous_scene:
-            item = previous_scene.result
-            if len(item.children) == 0:
-                print(f"Empty children for {item}")
-                return None
-        return selector.Selector(
-            name,
-            item.children,
-            get_screen_height(),
-            "Selector",
-            "Selector" if item.parent else None
-        )
-    elif name == "Layout":
-        return get_key_setup_scene(qmk_dir / previous_scene.result)
+        return get_selector(name, previous_scene)
+    elif name == "LayoutView":
+        return get_key_setup_scene(previous_scene.item, previous_scene.result)
     else:
         raise ValueError(f"Unknown scene type {name}")
 
 
 init_window(800, 450, "Hello")
 set_target_fps(60)
+set_exit_key(KEY_F12)
 
 current_scene = selector.Selector(
     "Select a keyboard layout",
-    root.children,
+    root,
+    selector.DirectoryExtractor(root),
     get_screen_height(),
     "Selector",
     None
