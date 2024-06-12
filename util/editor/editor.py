@@ -13,8 +13,6 @@ qmk_dir = Path(sys.argv[1] if len(sys.argv) > 1 else ".")
 
 
 def get_key_setup_scene(info: find_info, layout_key: str):
-    # TODO: Get all the info.json's, we need to select a keymap
-    
     info.load()
 
     layout_data = info.info["layouts"][layout_key]["layout"]
@@ -31,12 +29,16 @@ def get_key_setup_scene(info: find_info, layout_key: str):
         if pos[0] not in matrix:
             matrix[pos[0]] = dict()
         matrix[pos[0]][pos[1]] = (float(item["x"]), float(item["y"]))
+        width = key_width
+        offset = 1
+        if "w" in item:
+            width = int(float(item["w"]) * key_width)
         keyboard_scene.contents.append(
             elements.Rectangle(
-                int(float(item["x"]) * key_width),
-                int(float(item["y"]) * key_height),
-                key_width,
-                key_height,
+                int(float(item["x"]) * key_width + offset),
+                int(float(item["y"]) * key_height + offset),
+                width - offset * 2,
+                key_height - offset * 2,
                 BLACK
             )
         )
@@ -59,6 +61,8 @@ def get_selector(name: str, previous_scene: scene.Scene):
                 item = item.parent
                 if item:
                     item.load()
+            if len(item.info["layouts"]) == 1:
+                return get_key_setup_scene(item, list(item.info["layouts"].keys())[0])
             return selector.Selector(
                 "LayoutSelector",
                 item,
