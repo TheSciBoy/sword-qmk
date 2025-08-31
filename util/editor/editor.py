@@ -7,10 +7,11 @@ import elements
 import scene
 import selector
 import find_info
+import switchboard
 
 
 qmk_dir = Path(sys.argv[1] if len(sys.argv) > 1 else ".")
-
+stack = list()
 
 def get_key_setup_scene(info: find_info, layout_key: str):
     info.load()
@@ -97,16 +98,17 @@ init_window(800, 450, "Hello")
 set_target_fps(60)
 set_exit_key(KEY_F12)
 
-current_scene = selector.Selector(
+stack.append(selector.Selector(
     "Select a keyboard layout",
     root,
     selector.DirectoryExtractor(root),
     get_screen_height(),
     "Selector",
     None
-)
+))
 
-while current_scene and not window_should_close():
+while stack and not window_should_close():
+    current_scene = stack.pop()
     next_scene = current_scene.execute()
     if next_scene:
         current_scene = get_scene(next_scene, current_scene)
@@ -123,5 +125,7 @@ while current_scene and not window_should_close():
     
     if current_scene:
         current_scene.draw()
+    
+    stack.append(current_scene)
 
 close_window()
